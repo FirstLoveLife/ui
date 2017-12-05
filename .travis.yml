@@ -24,6 +24,7 @@ addons:
             - libgtk2.0-dev
             - libwebkitgtk-dev
             - realpath
+            - lcov
 
 before_install:
     - sudo apt-get update -yq
