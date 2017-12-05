@@ -9,6 +9,10 @@ version: 1.0.{build}-{branch}
 
 shallow_clone: true
 
+branches:
+    only:
+        - master
+
 environment:
     matrix:
         # Visual Studio 2008, _CPPLIB_VER: 505
