@@ -67,7 +67,7 @@ script:
     - (test "$SKIP_CPP11" && echo "SKIPPED") || ./b2 libs/ui/example/cpp11 toolset=$TOOLSET cxxflags=--coverage linkflags=--coverage
     - pushd bin.v2/libs/ui
     - find -name *.gcno|xargs gcov
-    - lcov --directory . --capture --output-file app.info
+    - lcov --directory . --capture --output-file app.info --base-directory `pwd`
     - lcov --output-file app.info --remove app.info `cat app.info|grep "^SF:"|cut -d ":" -f 2|grep -v "/boost/ui/"|grep -v "/ui/src/"|xargs echo`
     - lcov -l app.info
     - gem install coveralls-lcov
