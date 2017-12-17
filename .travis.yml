@@ -65,10 +65,12 @@ script:
     - ./b2 libs/ui/test toolset=$TOOLSET cxxflags=--coverage linkflags=--coverage
     - ./b2 libs/ui/example toolset=$TOOLSET cxxflags=--coverage linkflags=--coverage
     - (test "$SKIP_CPP11" && echo "SKIPPED") || ./b2 libs/ui/example/cpp11 toolset=$TOOLSET cxxflags=--coverage linkflags=--coverage
-    - find bin.v2/libs/ui -name *.gcno|xargs gcov
+    - pushd bin.v2/libs/ui/
+    - find -name *.gcno|xargs gcov
     - lcov --directory . --capture --output-file lcov.info --base-directory `pwd`
     - lcov --output-file lcov.info --remove lcov.info `cat lcov.info|grep "^SF:"|cut -d ":" -f 2|grep -v "/boost/ui/"|grep -v "/ui/src/"|xargs echo`
     - lcov -l lcov.info
     - gem install coveralls-lcov
     - coveralls-lcov lcov.info
     - bash <(curl -s https://codecov.io/bash)
+    - popd
