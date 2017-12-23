@@ -9,10 +9,6 @@ version: 1.0.{build}-{branch}
 
 shallow_clone: true
 
-branches:
-    only:
-        - master
-
 environment:
     matrix:
         # Visual Studio 2008, _CPPLIB_VER: 505
@@ -45,7 +41,7 @@ environment:
 install:
 - cmd: |
     cd ..
-    git clone -b boost-1.65.1 --depth 1 https://github.com/boostorg/boost.git boost-root
+    git clone -b boost-1.66.0 --depth 1 https://github.com/boostorg/boost.git boost-root
     cd boost-root
     git submodule update --init --checkout --depth 1
     git submodule update --init tools/build
