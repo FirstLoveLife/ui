@@ -16,12 +16,6 @@
 
 #include <boost/ui/widget.hpp>
 
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
-#include <boost/move/utility.hpp>
-#else
-#include <boost/bind.hpp>
-#endif
-
 namespace boost {
 namespace ui    {
 
@@ -37,25 +31,15 @@ class BOOST_UI_DECL button : public widget
 public:
     button() {}
 
-    ///@{ Creates button with label string
+    ///@{ @brief Creates button with text label with mnemonics
+    /// @see <a href="https://en.wikipedia.org/wiki/Mnemonics_(keyboard)">Mnemonics (Wikipedia)</a>
     explicit button(widget& parent, const uistring& label)
         { create(parent, label); }
     button& create(widget& parent, const uistring& label);
     ///@}
 
     /// Connects button press handler
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
-    template <class F, class ...Args>
-    button& on_press(F&& f, Args&&... args)
-        { on_press_raw(std::bind(boost::forward<F>(f), boost::forward<Args>(args)...)); return *this; }
-#else
-    button& on_press(const boost::function<void()>& handler)
-        { on_press_raw(handler); return *this; }
-
-    template <class F, class Arg1>
-    button& on_press(F f, Arg1 a1)
-        { on_press_raw(boost::bind(f, a1)); return *this; }
-#endif
+    BOOST_UI_DETAIL_HANDLER(press, button);
 
 private:
     void on_press_raw(const boost::function<void()>& handler);

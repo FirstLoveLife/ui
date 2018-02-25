@@ -22,7 +22,7 @@ namespace utility {
 void on_handler(const char* class_name,
                 const char* event_name)
 {
-    ui::log().spaces() << class_name << event_name;
+    ui::log() << class_name << event_name;
 }
 
 boost::function<void()>
@@ -44,7 +44,7 @@ void on_event_handler<ui::key_event>(ui::key_event& e,
                                      const char* class_name,
                                      const char* event_name)
 {
-    ui::log().spaces() << class_name << event_name
+    ui::log() << class_name << event_name
         << e.key_code() << e.get_char()
         << static_cast<char>(e.get_char())
         << (e.ctrl()  ? "ctrl"  : "")
@@ -58,7 +58,7 @@ void on_event_handler<ui::mouse_event>(ui::mouse_event& e,
                                        const char* class_name,
                                        const char* event_name)
 {
-    ui::log().spaces() << class_name << event_name << e.x() << e.y()
+    ui::log() << class_name << event_name << e.x() << e.y()
         << (e.left()   ? "left"   : "")
         << (e.right()  ? "right"  : "")
         << (e.middle() ? "middle" : "");
@@ -69,7 +69,7 @@ void on_event_handler<ui::wheel_event>(ui::wheel_event& e,
                                        const char* class_name,
                                        const char* event_name)
 {
-    ui::log().spaces() << class_name << event_name << e.x() << e.y()
+    ui::log() << class_name << event_name << e.x() << e.y()
         << (e.left()   ? "left"   : "")
         << (e.right()  ? "right"  : "")
         << (e.middle() ? "middle" : "")
@@ -82,7 +82,7 @@ void on_event_handler<ui::index_event>(ui::index_event& e,
                                        const char* class_name,
                                        const char* event_name)
 {
-    ui::log().spaces() << class_name << event_name << e.index();
+    ui::log() << class_name << event_name << e.index();
 }
 
 template <class Event>
@@ -211,7 +211,7 @@ demo_frame::demo_frame(int page) : ui::frame("Boost.UI Demo")
             << m_progress_bar.create(widgets_panel, 50)
                 .layout().justify()
             << m_slider.create(widgets_panel, 50)
-                .on_slide(boost::bind(&this_type::on_slide, this))
+                .on_slide(&this_type::on_slide, this)
                 .on_slide(utility::make_handler("slider", "slide"))
                 .on_slide_end(utility::make_handler("slider", "slide end"))
                 .layout().justify()
@@ -241,10 +241,10 @@ demo_frame::demo_frame(int page) : ui::frame("Boost.UI Demo")
     ui::vbox(datetime_panel)
         << m_date_picker.create(datetime_panel)
             .on_change(utility::make_handler("date picker", "change"))
-            .on_change(boost::bind(&this_type::on_date_change, this))
+            .on_change(&this_type::on_date_change, this)
         << m_time_picker.create(datetime_panel)
             .on_change(utility::make_handler("time picker", "change"))
-            .on_change(boost::bind(&this_type::on_time_change, this))
+            .on_change(&this_type::on_time_change, this)
         ;
 
     ui::web_widget web_widget_panel(main_notebook);
@@ -262,7 +262,7 @@ demo_frame::demo_frame(int page) : ui::frame("Boost.UI Demo")
     }
 
     m_canvas.create(main_notebook)
-        .on_resize(boost::bind(&this_type::on_canvas_resize, this))
+        .on_resize(&this_type::on_canvas_resize, this)
         .on_key_press_event(utility::make_event_handler<ui::key_event>("canvas", "key press"))
         .on_key_down_event(utility::make_event_handler<ui::key_event>("canvas", "key down"))
         .on_key_up_event(utility::make_event_handler<ui::key_event>("canvas", "key up"))
@@ -281,12 +281,35 @@ demo_frame::demo_frame(int page) : ui::frame("Boost.UI Demo")
         .on_mouse_leave_event(utility::make_event_handler<ui::mouse_event>("canvas", "mouse leave"))
         .on_context_menu_event(utility::make_event_handler<ui::mouse_event>("canvas", "context menu"))
         .on_mouse_wheel_event(utility::make_event_handler<ui::wheel_event>("canvas", "mouse wheel"))
-        .on_mouse_drag_event(boost::bind(&this_type::on_canvas_mouse_draw, this, _1))
-        .on_context_menu_event(boost::bind(&this_type::on_canvas_context_menu, this, _1))
+        .on_mouse_drag_event(&this_type::on_canvas_mouse_draw, this)
+        .on_context_menu_event(&this_type::on_canvas_context_menu, this)
         ;
     main_notebook.append_page(m_canvas, "Canvas");
 
     main_notebook.current_page(page);
+
+    menu_bar()
+        << ( ui::menu("&File")
+            << ui::menu::item("&Open")
+            << ui::menu::item("&Close")
+            << ui::separator()
+            << ui::menu::item("&Press me")
+                .on_press(&on_press_me)
+            << ui::menu::item("Show &logs")
+                .on_press(&on_log)
+            << ui::separator()
+            << ui::menu::item("&Quit")
+                .on_press(&this_type::close, this)
+           )
+        << ( ui::menu("&Edit")
+            << ui::menu::item("Cu&t")
+            << ui::menu::item("&Copy")
+            << ui::menu::item("&Paste")
+           )
+        << ( ui::menu("&Help")
+            << ui::menu::item("A&bout")
+           )
+        ;
 
     resize(600, 500);
 }
@@ -294,7 +317,7 @@ demo_frame::demo_frame(int page) : ui::frame("Boost.UI Demo")
 void demo_frame::on_press_me()
 {
     std::ostringstream info;
-    info << "Button pressed";
+    info << "Button or menu item pressed";
 
     info << "\n\nBoost version " << BOOST_VERSION / 100000
         << '.' << BOOST_VERSION / 100 % 1000
@@ -448,7 +471,7 @@ void demo_frame::on_log()
     ui::log::trace()   << "Trace";
     ui::log()          << "Default log";
 
-    BOOST_UI_LOG.spaces().quotes() << "Test" << 12 << .34 << L'!';
+    BOOST_UI_LOG << "Test" << 12 << .34 << L'!';
 
     std::string().at(0); // Test exception handling
 }
@@ -560,8 +583,13 @@ void demo_frame::on_canvas_mouse_draw(ui::mouse_event& e)
 void demo_frame::on_canvas_context_menu(ui::mouse_event& e)
 {
     (ui::menu()
-        << ui::menu::item("&Hello")
-        << ui::menu::item("&Test")
+        << ui::menu::item("&Press me")
+            .on_press(&on_press_me)
+        << ui::separator()
+        << ( ui::menu("&More")
+            << ui::menu::item("Show &logs")
+                .on_press(&on_log)
+           )
     ).popup(m_canvas);
 }
 
@@ -577,7 +605,7 @@ int ui_main(int argc, char* argv[])
     else if ( argc > 1 )
     {
         for ( int i = 0; i < argc; i++ )
-            ui::log().spaces() << i << "argument" << argv[i];
+            ui::log() << i << "argument" << argv[i];
     }
 
     demo_frame(page).show_modal();

@@ -15,6 +15,8 @@
 #include <wx/string.h>
 #include <wx/log.h>
 
+#include <stdio.h> // for snprintf()
+
 namespace boost {
 namespace ui    {
 
@@ -182,9 +184,71 @@ std::wstring uistring::wstring() const
     return std::wstring(m_impl->ToStdWstring());
 }
 
-std::size_t hash_value(const uistring& val)
+namespace {
+
+template <class T>
+uistring to_uistring_detail(T value, const char* format)
 {
-    return boost::hash<std::wstring>()(val.wstring());
+    char buffer[32];
+#ifdef _MSC_VER
+    _snprintf
+#else
+    snprintf
+#endif
+        (buffer, sizeof buffer / sizeof buffer[0], format, value);
+    return ascii(buffer);
+}
+
+} // unnamed namespace
+
+uistring to_uistring(int value)
+{
+    return to_uistring_detail(value, "%d");
+}
+
+uistring to_uistring(unsigned int value)
+{
+    return to_uistring_detail(value, "%u");
+}
+
+uistring to_uistring(long value)
+{
+    return to_uistring_detail(value, "%ld");
+}
+
+uistring to_uistring(unsigned long value)
+{
+    return to_uistring_detail(value, "%lu");
+}
+
+uistring to_uistring(long long value)
+{
+    return to_uistring_detail(value, "%lld");
+}
+
+uistring to_uistring(unsigned long long value)
+{
+    return to_uistring_detail(value, "%llu");
+}
+
+uistring to_uistring(float value)
+{
+    return to_uistring_detail(value, "%f");
+}
+
+uistring to_uistring(double value)
+{
+    return to_uistring_detail(value, "%f");
+}
+
+uistring to_uistring(long double value)
+{
+    return to_uistring_detail(value, "%Lf");
+}
+
+std::size_t hash_value(const uistring& value)
+{
+    return boost::hash<std::wstring>()(value.wstring());
 }
 
 class native_helper

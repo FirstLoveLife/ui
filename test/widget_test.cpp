@@ -20,21 +20,99 @@
 
 namespace ui = boost::ui;
 
-void test_dialog(ui::dialog& dlg)
+void test_parent(ui::window& parent)
 {
-    ui::dialog dlg_not_created;
-    BOOST_TEST(dlg_not_created.native_handle() == NULL);
-    BOOST_TEST(!dlg_not_created.native_valid());
+    BOOST_TEST(parent.native_handle() != NULL);
+    BOOST_TEST(parent.native_valid());
 
-    BOOST_TEST(dlg.native_handle() != NULL);
-    BOOST_TEST(dlg.native_valid());
+    BOOST_TEST(!parent.is_shown());
 
-    BOOST_TEST(!dlg.is_shown());
+    BOOST_TEST_EQ(parent.title(), "Title");
+    parent.title(parent.title() + " test");
+    BOOST_TEST_EQ(parent.title(), "Title test");
+}
 
-    ui::window win = dlg;
-    BOOST_TEST_EQ(win.title(), "Title");
-    win.title(win.title() + " test");
-    BOOST_TEST_EQ(win.title(), "Title test");
+void my_handler()
+{
+    BOOST_UI_LOG;
+}
+
+void my_handler_1(int value)
+{
+    BOOST_UI_LOG << value;
+}
+
+void my_handler_2(int value, const char* value2)
+{
+    BOOST_UI_LOG << value << value2;
+}
+
+void my_handler_event(ui::mouse_event& e)
+{
+    BOOST_UI_LOG << e.x() << e.y();
+}
+
+void my_handler_event_1(int value, ui::mouse_event& e)
+{
+    BOOST_UI_LOG << value << e.x() << e.y();
+}
+
+void my_handler_event_2(int value, const char* value2, ui::mouse_event& e)
+{
+    BOOST_UI_LOG << value << value2 << e.x() << e.y();
+}
+
+class my_handlers
+{
+public:
+    my_handlers(int value) : m_value(value) {}
+    void my_handler()
+    {
+        BOOST_UI_LOG << m_value;
+    }
+    void my_handler_event(ui::mouse_event& e)
+    {
+        BOOST_UI_LOG << m_value << e.x() << e.y();
+    }
+    void my_handler_event_1(int value, ui::mouse_event& e)
+    {
+        BOOST_UI_LOG << m_value << value << e.x() << e.y();
+    }
+
+private:
+    int m_value;
+};
+
+template <class TWindow>
+void test_window(ui::window& parent)
+{
+    TWindow win_not_created;
+    BOOST_TEST(!win_not_created.native_valid());
+    BOOST_TEST(win_not_created.native_handle() == NULL);
+
+    TWindow win("My title");
+    BOOST_TEST_EQ(win.title(), "My title");
+    win.title(win.title() + " test!");
+    BOOST_TEST_EQ(win.title(), "My title test!");
+
+    BOOST_TEST(!win.is_shown());
+    win.show();
+    BOOST_TEST(win.is_shown());
+    win.hide();
+    BOOST_TEST(!win.is_shown());
+
+    win.on_mouse_drag(&my_handler);
+    win.on_mouse_drag(&my_handler_1, 2);
+    win.on_mouse_drag(&my_handler_2, 4, "b4");
+    win.on_mouse_drag_event(&my_handler_event);
+    win.on_mouse_drag_event(&my_handler_event_1, 3);
+    win.on_mouse_drag_event(&my_handler_event_2, 3, "c5");
+    my_handlers a(10);
+    win.on_mouse_drag(&my_handlers::my_handler, &a);
+    win.on_mouse_drag_event(&my_handlers::my_handler_event, &a);
+    win.on_mouse_drag_event(&my_handlers::my_handler_event_1, &a, 9);
+
+    //win.show_modal();
 }
 
 void test_canvas(ui::widget parent)
@@ -174,8 +252,10 @@ void test_check_box(ui::widget parent)
 }
 
 template <class Widget>
-void test_text(Widget& widget)
+void test_text(ui::widget parent)
 {
+    Widget widget(parent, "Text");
+    BOOST_TEST(widget.native_handle() != NULL);
     BOOST_TEST_EQ(widget.text(), "Text");
     widget.text(widget.text() + "!");
     BOOST_TEST_EQ(widget.text(), "Text!");
@@ -186,20 +266,14 @@ void test_text(Widget& widget)
 void test_text_box(ui::widget parent)
 {
     {
-        ui::string_box text;
-        BOOST_TEST(text.native_handle() == NULL);
+        ui::string_box w;
+        BOOST_TEST(w.native_handle() == NULL);
     }
 
-    {
-        ui::string_box text(parent, "Text");
-        test_text(text);
-    }
-
-    {
-        ui::label label;
-        label.create(parent, "Text");
-        test_text(label);
-    }
+    test_text<ui::string_box>(parent);
+    test_text<ui::text_box>(parent);
+    test_text<ui::password_box>(parent);
+    test_text<ui::label>(parent);
 }
 
 template <class Container>
@@ -362,11 +436,65 @@ void test_slider(ui::widget parent)
     ui::hslider(parent, -30, -40, -20);
 }
 
+void test_notebook(ui::widget parent)
+{
+    ui::notebook nb(parent);
+    BOOST_TEST_EQ(nb.current_page_index(), -1);
+
+    ui::panel p1(nb);
+    nb.append_page(p1, "Test 1");
+    BOOST_TEST_EQ(nb.current_page_index(), 0);
+
+    ui::panel p2(nb);
+    nb.append_page(p2, "Test 2");
+    BOOST_TEST_EQ(nb.current_page_index(), 0);
+
+    nb.current_page(1);
+    BOOST_TEST_EQ(nb.current_page_index(), 1);
+}
+
+void test_static_widgets(ui::widget parent)
+{
+    {
+        ui::vline w(parent);
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::hline w(parent);
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::group_box w(parent, "My title");
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::hyperlink w(parent, "http://www.boost.org/", "Boost C++ libraries");
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::image_widget w(parent, ui::image::xdg("folder", 32, 32));
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::image_widget w;
+        BOOST_TEST(!w.native_valid());
+        w.create(parent).image(ui::image::xdg("folder", 32, 32));
+        BOOST_TEST(w.native_valid());
+    }
+    {
+        ui::web_widget w(parent);
+        BOOST_TEST(w.native_valid());
+        w.load("http://www.boost.org/");
+    }
+}
+
 int ui_main()
 {
     ui::dialog dlg("Title");
 
-    test_dialog(dlg);
+    test_parent(dlg);
+    test_window<ui::dialog>(dlg);
+    test_window<ui::frame>(dlg);
     test_canvas(dlg);
     test_button(dlg);
     test_check_box<ui::check_box>(dlg);
@@ -377,6 +505,8 @@ int ui_main()
     test_strings_box<ui::list_box>(dlg);
     test_progress_bar(dlg);
     test_slider(dlg);
+    test_notebook(dlg);
+    test_static_widgets(dlg);
 
     BOOST_TEST(!ui::getloc().name().empty());
 

@@ -20,8 +20,8 @@ namespace chrono_ns = boost::chrono;
 #endif
 
 #include <boost/ui.hpp>
-#include <boost/bind.hpp>
 #include <boost/optional.hpp>
+
 #include <vector>
 #include <list>
 #ifndef BOOST_NO_CXX11_HDR_FORWARD_LIST
@@ -327,7 +327,7 @@ private:
 sort_dialog::sort_dialog() : ui::dialog("Visualization of sorting algorithms"),
     m_max_value(10)
 {
-    on_close_event(boost::bind(&this_type::on_close_handler, this, _1));
+    on_close_event(&this_type::on_close_handler, this);
 
     static const char *sorting_algorithms[] =
     {
@@ -339,7 +339,7 @@ sort_dialog::sort_dialog() : ui::dialog("Visualization of sorting algorithms"),
 
     ui::hbox(*this)
         << m_canvas.create(*this)
-            .on_resize(boost::bind(&this_type::draw, this))
+            .on_resize(&this_type::draw, this)
             .layout().justify().stretch()
         << ( ui::vbox().layout().justify()
             << ui::label(*this, "Algorithm:")
@@ -457,8 +457,7 @@ void sort_dialog::on_run()
 
     if ( !m_start_button.is_enabled() )
     {
-        ui::on_timeout(chrono_ns::milliseconds(100),
-                       boost::bind(&this_type::on_run, this));
+        ui::on_timeout(chrono_ns::milliseconds(100), &this_type::on_run, this);
     }
 }
 

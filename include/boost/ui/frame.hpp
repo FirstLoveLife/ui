@@ -15,11 +15,12 @@
 #endif
 
 #include <boost/ui/window.hpp>
+#include <boost/ui/menu.hpp>
 
 namespace boost {
 namespace ui    {
 
-/// @brief Top level widget that hosts other widgets and supports menus
+/// @brief Top level widget that hosts other widgets and supports menu bar
 /// @see <a href="http://en.wikipedia.org/wiki/Window_(computing)">Window (Wikipedia)</a>
 /// @ingroup container
 
@@ -33,6 +34,10 @@ public:
         { create(title); }
     frame& create(const uistring& title);
     ///@}
+
+    /// @brief Returns menu bar
+    /// @details If menu bar wasn't created, creates menu bar.
+    ui::menu_bar menu_bar();
 
 private:
     class detail_impl;
