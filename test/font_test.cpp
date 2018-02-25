@@ -35,7 +35,7 @@ int ui_main()
         BOOST_TEST(f.valid());
         BOOST_TEST(f.native_handle());
         BOOST_TEST_EQ(f.size_pt(), 12);
-        BOOST_TEST_EQ(f.name().string(), font_name);
+        BOOST_TEST(f.name().wstring() == font_name);
         BOOST_TEST(f.get_family() != ui::font::family::monospace);
         BOOST_TEST(f.get_slant()  == ui::font::slant::normal);
         BOOST_TEST(f.get_weight() == ui::font::weight::normal);
@@ -55,7 +55,7 @@ int ui_main()
     {
         ui::font f = ui::font::caption();
         BOOST_TEST_EQ(f.size_pt(14).size_pt(), 14);
-        BOOST_TEST_EQ(f.name(font_name).name().string(), font_name);
+        BOOST_TEST(f.name(font_name).name().wstring() == font_name);
         BOOST_TEST(f.set_slant(ui::font::slant::italic).get_slant()
                             == ui::font::slant::italic);
         BOOST_TEST(f.set_weight(ui::font::weight::bold).get_weight()
